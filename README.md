@@ -71,7 +71,7 @@ Developed as the individual development project **“다중 수치모델 3차원
 ### Methodology
 
 ```mermaid
-flowchart LR
+flowchart TB
     A["Point workbook"] --> B["Model entries<br/>parallel processing"]
     B --> C{"WRF family?"}
     C -->|Yes| D["Coordinate grid"]
@@ -90,6 +90,9 @@ flowchart LR
     class I report
 ```
 
+<details>
+<summary><strong>Step-by-step processing</strong></summary>
+
 1. Read service locations from `포인트.xlsx`.
 2. Resolve each model's file and coordinate, value, and time-variable mappings.
 3. Construct a horizontal grid from one-dimensional latitude/longitude arrays, or use existing two-dimensional coordinate arrays.
@@ -97,6 +100,8 @@ flowchart LR
 5. Compute the Haversine distance from each location to every grid cell.
 6. Select the cell with the smallest distance among eligible cells at or within 40 km.
 7. Merge model results with the input table and write `포인트지정.csv`.
+
+</details>
 
 Selection is performed independently for each location and model entry. The result is a **nearest eligible cell assignment**. The script does not interpolate values, compare forecasts with observations, align timestamps between models, or evaluate forecast skill. If eligible cells have exactly equal computed distances, NumPy's array traversal order determines the selected index.
 
@@ -127,6 +132,7 @@ Users should check coordinate units, geographic ranges, missing coordinates, gri
 | `(신규융합정보) 다중 수치모델 3차원 정상값 검증 및 최근접 격자 자동매칭 알고리즘 개발_이상학.pdf` | Project background and presentation material, in Korean |
 | `requirements.txt` | Third-party Python dependencies |
 | `tests/test_matching.py` | Regression checks using synthetic NetCDF datasets |
+| `docs/assets/` | Versioned SVG banner and documentation badges |
 | `model/` | Local model data; excluded from version control |
 
 <a id="en-quick-start"></a>
@@ -308,7 +314,7 @@ The presentation's reported runtime of approximately six minutes for 1,000 locat
 ### Methodology · 처리 방법
 
 ```mermaid
-flowchart LR
+flowchart TB
     A["지점 Excel"] --> B["모델 항목별<br/>병렬 처리"]
     B --> C{"WRF 계열?"}
     C -->|예| D["좌표 격자"]
@@ -327,6 +333,9 @@ flowchart LR
     class I report
 ```
 
+<details>
+<summary><strong>단계별 처리 설명</strong></summary>
+
 1. `포인트.xlsx`에서 대상 지점 정보를 읽습니다.
 2. 모델별 파일과 좌표·값·시간 변수 설정을 확인합니다.
 3. 1차원 위·경도 축은 수평 격자로 확장하고, 2차원 좌표 격자는 그대로 사용합니다.
@@ -334,6 +343,8 @@ flowchart LR
 5. 각 지점에서 모델 격자까지의 Haversine 거리를 계산합니다.
 6. 40km 이내 유효 후보 중 거리 최솟값에 해당하는 격자를 선택합니다.
 7. 모델별 결과를 입력 표와 결합해 `포인트지정.csv`로 저장합니다.
+
+</details>
 
 매칭은 지점·모델 항목별로 독립 수행합니다. 산출물은 **값 조건을 통과한 최근접 격자의 지정 결과**입니다. 보간, 관측값과의 비교, 모델 간 시간 정렬, 예측 성능 평가는 수행하지 않습니다. 계산된 거리가 정확히 같은 후보가 여러 개이면 NumPy 배열 탐색 순서에 따라 선택합니다.
 
@@ -364,6 +375,7 @@ flowchart LR
 | `(신규융합정보) 다중 수치모델 3차원 정상값 검증 및 최근접 격자 자동매칭 알고리즘 개발_이상학.pdf` | 프로젝트 배경 및 설명자료 |
 | `requirements.txt` | 외부 Python 패키지 목록 |
 | `tests/test_matching.py` | 합성 NetCDF 기반 회귀 검증 |
+| `docs/assets/` | 버전 관리되는 SVG 배너와 문서 배지 |
 | `model/` | 직접 준비하는 모델 데이터, Git 추적 제외 |
 
 <a id="ko-quick-start"></a>
