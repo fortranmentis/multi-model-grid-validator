@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="26" viewBox="0 0 250 26" role="img" aria-label="Test snapshot: 11 passed on 2026-10-14">
+  <rect width="250" height="26" rx="4" fill="#15803d"/>
+  <path d="M4 0H88V26H4Q0 26 0 22V4Q0 0 4 0" fill="#334155"/>
+  <g fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="11" text-anchor="middle"><text x="44" y="17">Test snapshot</text><text x="169" y="17">11 passed | 2026-10-14</text></g>
+</svg>

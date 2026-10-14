@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="167" height="26" viewBox="0 0 167 26" role="img" aria-label="Input: NetCDF and Excel">
+  <rect width="167" height="26" rx="4" fill="#0e7490"/>
+  <path d="M4 0H48V26H4Q0 26 0 22V4Q0 0 4 0" fill="#334155"/>
+  <g fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="11" text-anchor="middle"><text x="24" y="17">Input</text><text x="107" y="17">NetCDF + Excel</text></g>
+</svg>

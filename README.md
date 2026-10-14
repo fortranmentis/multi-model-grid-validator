@@ -1,10 +1,45 @@
-# multi-model-grid-validator
+<a id="top"></a>
 
-Time-series value screening and automated nearest-grid matching for ocean, wave, and atmospheric numerical models.
+# Multi-Model Grid Validator
 
-[English](#english) · [한국어](#한국어)
+<p align="center">
+  <img src="docs/assets/readme-banner.svg" alt="From locations to model grids: spatial matching and temporal screening" width="1200" />
+</p>
+
+<p align="center">
+  <strong>Time-series value screening and nearest-grid matching</strong><br />
+  Ocean · Wave · Atmospheric numerical models
+</p>
+
+<p align="center">
+  <a href="#en-validation"><img src="docs/assets/badges/python.svg" alt="Tested with Python 3.13.9" /></a>
+  <a href="#en-data"><img src="docs/assets/badges/input.svg" alt="Input: NetCDF and Excel" /></a>
+  <a href="#en-validation"><img src="docs/assets/badges/validation.svg" alt="Recorded test snapshot: 11 passed on 2026-10-14" /></a>
+  <a href="#english"><img src="docs/assets/badges/languages.svg" alt="Documentation in English and Korean" /></a>
+</p>
+
+<p align="center">
+  <a href="#english"><strong>English</strong></a> ·
+  <a href="#한국어"><strong>한국어</strong></a> ·
+  <a href="#en-quick-start">Quick start</a> ·
+  <a href="#en-methodology">Workflow</a> ·
+  <a href="#en-validation">Validation</a> ·
+  <a href="tests/test_matching.py">Tests</a>
+</p>
+
+| Search radius | Screening window | Model entries | Export |
+| :---: | :---: | :---: | :---: |
+| **40 km** | **First up to 20 timesteps**¹ | **15 configurations** | **CSV · euc-kr** |
+
+¹ WRF entries use coordinate-based matching only. The test badge records a dated local run.
+
+---
 
 ## English
+
+[About](#en-about) · [Highlights](#en-highlights) · [Methodology](#en-methodology) · [Data contract](#en-data) · [Files](#en-contents) · [Quick start](#en-quick-start) · [Models](#en-models) · [Output](#en-output) · [Validation](#en-validation) · [Notes](#en-notes)
+
+<a id="en-about"></a>
 
 ### About
 
@@ -14,19 +49,46 @@ The workflow supports point-based marine and meteorological services where a spa
 
 Developed as the individual development project **“다중 수치모델 3차원 정상값 검증 및 최근접 격자 자동매칭 알고리즘 개발”** (three-dimensional value validation and automated nearest-grid matching across multiple numerical models).
 
-**Scope of “3D”:** the implementation operates on `(time, y, x)` arrays. Here, three dimensions mean time and two horizontal grid axes. Vertical coordinates such as depth or altitude, and `(time, z, y, x)` arrays, are outside the current implementation.
+> [!NOTE]
+> **Scope of “3D”:** the implementation operates on `(time, y, x)` arrays. Here, three dimensions mean time and two horizontal grid axes. Vertical coordinates such as depth or altitude, and `(time, z, y, x)` arrays, are outside the current implementation.
+
+<a id="en-highlights"></a>
 
 ### Highlights
 
-- **Temporal eligibility screening:** a non-WRF cell must pass the implemented value rule at every inspected timestep.
-- **Distance-constrained selection:** Haversine distance, using a spherical Earth radius of 6,371 km, limits candidates to 40 km and determines the nearest eligible cell.
-- **Multiple model configurations:** 15 processing entries cover ocean, wave, and atmospheric models, including five CWW3 domains.
-- **Model-specific handling:** WRF, WRFdm1, and WRFdm2 use coordinate-based nearest-cell selection without time-series or value screening.
-- **Parallel execution:** available model entries are processed in a multiprocessing pool and combined in the original input row order.
-- **Partial-result handling:** missing, unreadable, or unsupported model files are reported to the console; successful model results are retained.
-- **Tabular integration:** original input columns are preserved, and model-specific indices and sample values are appended to an `euc-kr` CSV.
+| Capability | What it provides |
+| --- | --- |
+| **Temporal screening** | A non-WRF cell must pass the value rule at every inspected timestep |
+| **Spatial matching** | Haversine distance selects the nearest eligible cell within 40 km |
+| **Multiple models** | 15 processing entries, including five CWW3 domains |
+| **WRF handling** | Coordinate-based selection for WRF, WRFdm1, and WRFdm2 |
+| **Parallel processing** | Model entries run in a process pool; input row order is preserved |
+| **Partial results** | Successful model results are retained when other entries fail |
+| **Tabular export** | Original columns plus model indices and first-timestep values |
+
+<a id="en-methodology"></a>
 
 ### Methodology
+
+```mermaid
+flowchart LR
+    A["Point workbook"] --> B["Model entries<br/>parallel processing"]
+    B --> C{"WRF family?"}
+    C -->|Yes| D["Coordinate grid"]
+    C -->|No| E["Value screening<br/>first up to 20 timesteps"]
+    D --> F["Nearest eligible cell<br/>within 40 km"]
+    E --> F
+    F --> G["Merge by input row"]
+    G --> H["CSV output"]
+    B -.->|Missing or failed| I["Console report<br/>entry excluded"]
+    I -.-> G
+    classDef input fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef process fill:#ecfdf5,stroke:#0d9488,color:#134e4a
+    classDef report fill:#fff7ed,stroke:#c2410c,color:#7c2d12
+    class A,H input
+    class B,C,D,E,F,G process
+    class I report
+```
 
 1. Read service locations from `포인트.xlsx`.
 2. Resolve each model's file and coordinate, value, and time-variable mappings.
@@ -37,6 +99,8 @@ Developed as the individual development project **“다중 수치모델 3차원
 7. Merge model results with the input table and write `포인트지정.csv`.
 
 Selection is performed independently for each location and model entry. The result is a **nearest eligible cell assignment**. The script does not interpolate values, compare forecasts with observations, align timestamps between models, or evaluate forecast skill. If eligible cells have exactly equal computed distances, NumPy's array traversal order determines the selected index.
+
+<a id="en-data"></a>
 
 ### Data contract
 
@@ -50,6 +114,8 @@ Selection is performed independently for each location and model entry. The resu
 
 Users should check coordinate units, geographic ranges, missing coordinates, grid compatibility, and variable dimension order before execution. The script does not provide comprehensive input-schema or coordinate-reference-system validation. No coordinate transformation or unit conversion is performed. Timesteps are inspected by array position; elapsed duration depends on the source dataset.
 
+<a id="en-contents"></a>
+
 ### Repository contents
 
 | Path | Purpose |
@@ -62,6 +128,8 @@ Users should check coordinate units, geographic ranges, missing coordinates, gri
 | `requirements.txt` | Third-party Python dependencies |
 | `tests/test_matching.py` | Regression checks using synthetic NetCDF datasets |
 | `model/` | Local model data; excluded from version control |
+
+<a id="en-quick-start"></a>
 
 ### Quick start
 
@@ -81,7 +149,8 @@ python -m pip install -r requirements.txt
 python "지점_격자_자동매칭.py"
 ```
 
-macOS / Linux:
+<details>
+<summary>macOS / Linux commands</summary>
 
 ```bash
 source .venv/bin/activate
@@ -89,13 +158,20 @@ python -m pip install -r requirements.txt
 python "지점_격자_자동매칭.py"
 ```
 
+</details>
+
 Before running, populate `포인트.xlsx`, create `model/` beside the script, and supply the relevant NetCDF files. File paths are resolved relative to the **script directory**. `openpyxl` is required for `.xlsx` input; `multiprocessing` is part of the Python standard library.
 
 After running, inspect both the output columns and console messages. A CSV can be produced even when every model entry has been excluded.
 
+<a id="en-models"></a>
+
 ### Model configuration
 
 Edit `model_infos` in the script to change file or variable mappings. Every listed file is expected under `model/`.
+
+<details>
+<summary><strong>View all 15 model configurations</strong></summary>
 
 | Entry | NetCDF file | Latitude / longitude | Value variable | Time variable |
 | --- | --- | --- | --- | --- |
@@ -115,7 +191,11 @@ Edit `model_infos` in the script to change file or variable mappings. Every list
 | WRFdm1 | `wrfdm1_20240627_20240706.nc` | `lat_rho` / `lon_rho` | Not inspected | Not used |
 | WRFdm2 | `wrfdm2_20240627_20240706.nc` | `lat_rho` / `lon_rho` | Not inspected | Not used |
 
+</details>
+
 For non-WRF entries, the script first checks the configured time variable or dimension, then falls back to `ocean_time`, `time`, and `tim`. New mappings must conform to the supported array layouts.
+
+<a id="en-output"></a>
 
 ### Output specification
 
@@ -132,6 +212,8 @@ For a `(time, y, x)` value array, the sample corresponds to `values[0, <MODEL>_Y
 
 The output contains the original point coordinates and selected grid indices. Selected-cell coordinates, distances, and detailed rejection reasons are not exported.
 
+<a id="en-validation"></a>
+
 ### Validation
 
 Run the regression suite without supplying real model data:
@@ -142,6 +224,9 @@ python -m unittest discover -s tests -v
 
 **Recorded result: 11 synthetic-data tests passed on 2026-10-14.**
 
+<details>
+<summary><strong>Recorded validation environment</strong></summary>
+
 | Environment | Recorded version |
 | --- | --- |
 | Operating system | Windows |
@@ -151,17 +236,25 @@ python -m unittest discover -s tests -v
 | netCDF4 | 1.7.4 |
 | openpyxl | 3.1.5 |
 
+</details>
+
 Coverage includes known-distance checks, radius exclusion, rejection of an invalid nearest cell, eligibility across multiple timesteps, the 20-timestep limit, shorter time series, one- and two-dimensional coordinates, WRF exceptions, missing and unreadable files, unsupported value dimensions, and input-only output when all models are missing. A regression check also documents the current value rule's handling of positive infinity.
 
 NumPy-related `DeprecationWarning` messages occurred during netCDF4 array writes; the tests passed. Dependency versions are not pinned, so the environment table records the tested configuration rather than guaranteeing identical behavior across installations.
 
-**Evidence boundaries:** the full real-model workflow was not rerun during repository preparation. The tests establish behavior for the synthetic cases; they do not establish operational accuracy, forecast skill, or throughput on production datasets.
+> [!IMPORTANT]
+> **Evidence boundaries:** the full real-model workflow was not rerun during repository preparation. The tests establish behavior for the synthetic cases; they do not establish operational accuracy, forecast skill, or throughput on production datasets.
 
 The historical sample CSV contains **17 rows and 44 columns**, and its paired workbook contains 17 rows. The current root workbook contains **19 rows and 2 columns**. The historical CSV is therefore not a rerun of the current input. Each sample-output row has missing values for some models, so the example demonstrates the output format rather than complete matching coverage.
 
 The presentation's reported runtime of approximately six minutes for 1,000 locations is a historical claim and was not remeasured during repository preparation.
 
+<a id="en-notes"></a>
+
 ### Notes
+
+> [!IMPORTANT]
+> Review the value rule and source metadata before using the selected cells in an operational service.
 
 **Value screening semantics.** `is_normal_value()` excludes NaN and zero, then rejects values whose string representation contains `+` or `-`, or equals `nan`, `NaN`, or `None`. Negative values and scientific notation containing an exponent sign can therefore be rejected. Positive infinity can pass. This is an implementation-specific eligibility rule; it does not establish a variable's physical validity. Review it against the intended variable, units, and valid range before applying the results.
 
@@ -175,9 +268,15 @@ The presentation's reported runtime of approximately six minutes for 1,000 locat
 
 **Future improvements.** Candidate work includes variable-specific valid ranges, explicit finite-value and mask handling, configurable radius and time windows, sliced reads, selected-cell coordinates and distances, structured processing reports, vertical-level support, and result visualization. These are proposed extensions.
 
+[Back to top](#top) · [한국어 문서](#한국어)
+
 ---
 
 ## 한국어
+
+[개요](#ko-about) · [주요 기능](#ko-highlights) · [처리 방법](#ko-methodology) · [입력 요건](#ko-data) · [파일](#ko-contents) · [실행](#ko-quick-start) · [모델](#ko-models) · [출력](#ko-output) · [검증](#ko-validation) · [유의점](#ko-notes)
+
+<a id="ko-about"></a>
 
 ### About · 프로젝트 개요
 
@@ -187,19 +286,46 @@ The presentation's reported runtime of approximately six minutes for 1,000 locat
 
 **「다중 수치모델 3차원 정상값 검증 및 최근접 격자 자동매칭 알고리즘 개발」** 개인 목표 프로젝트로 개발했습니다.
 
-**3차원의 의미:** 현재 구현은 `(time, y, x)` 배열을 처리합니다. 시간과 두 수평 격자 축을 함께 검토하는 방식이며, 수심·고도 등 수직 좌표를 포함한 `(time, z, y, x)` 배열은 지원하지 않습니다.
+> [!NOTE]
+> **3차원의 의미:** 현재 구현은 `(time, y, x)` 배열을 처리합니다. 시간과 두 수평 격자 축을 함께 검토하는 방식이며, 수심·고도 등 수직 좌표를 포함한 `(time, z, y, x)` 배열은 지원하지 않습니다.
+
+<a id="ko-highlights"></a>
 
 ### Highlights · 주요 기능
 
-- **시계열 기반 후보 검증:** WRF 외 모델은 검사하는 모든 시점에서 값 조건을 만족해야 유효 후보가 됩니다.
-- **거리 제한 최근접 탐색:** 지구 반경 6,371km를 적용한 Haversine 거리로 40km 이내 후보 중 가장 가까운 격자를 선택합니다.
-- **다중 모델 설정:** 해양·파랑·대기 모델을 처리하며 CWW3의 5개 영역을 포함해 15개 처리 항목이 정의되어 있습니다.
-- **모델 특성별 처리:** WRF, WRFdm1, WRFdm2는 시간·값 검증 없이 좌표 기준 최근접 격자를 선택합니다.
-- **병렬 실행:** 사용 가능한 모델 항목을 프로세스 풀로 처리하고, 입력 지점의 행 순서를 유지해 결과를 결합합니다.
-- **부분 결과 유지:** 파일 누락·열기 실패·지원하지 않는 구조를 콘솔에 알리고, 성공한 모델의 결과는 저장합니다.
-- **표 형식 연계:** 입력의 기존 열에 모델별 인덱스와 표본값을 추가하며 CSV 인코딩은 `euc-kr`입니다.
+| 기능 | 제공 내용 |
+| --- | --- |
+| **시계열 검증** | WRF 외 격자는 검사하는 모든 시점에서 값 조건 통과 필요 |
+| **공간 매칭** | Haversine 거리로 40km 안의 최근접 유효 격자 선택 |
+| **다중 모델** | CWW3의 5개 영역을 포함한 15개 처리 항목 |
+| **WRF 처리** | WRF, WRFdm1, WRFdm2는 좌표 기준으로 선택 |
+| **병렬 실행** | 모델별 프로세스 풀 처리, 입력 행 순서 유지 |
+| **부분 결과** | 다른 항목이 실패해도 성공한 모델 결과 유지 |
+| **표 형식 출력** | 기존 열에 격자 인덱스와 첫 시점 값 추가 |
+
+<a id="ko-methodology"></a>
 
 ### Methodology · 처리 방법
+
+```mermaid
+flowchart LR
+    A["지점 Excel"] --> B["모델 항목별<br/>병렬 처리"]
+    B --> C{"WRF 계열?"}
+    C -->|예| D["좌표 격자"]
+    C -->|아니오| E["값 조건 검증<br/>최초 최대 20개 시점"]
+    D --> F["반경 40km 내<br/>최근접 유효 격자"]
+    E --> F
+    F --> G["입력 행 기준 결합"]
+    G --> H["CSV 출력"]
+    B -.->|누락 또는 실패| I["콘솔 안내<br/>해당 항목 제외"]
+    I -.-> G
+    classDef input fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef process fill:#ecfdf5,stroke:#0d9488,color:#134e4a
+    classDef report fill:#fff7ed,stroke:#c2410c,color:#7c2d12
+    class A,H input
+    class B,C,D,E,F,G process
+    class I report
+```
 
 1. `포인트.xlsx`에서 대상 지점 정보를 읽습니다.
 2. 모델별 파일과 좌표·값·시간 변수 설정을 확인합니다.
@@ -210,6 +336,8 @@ The presentation's reported runtime of approximately six minutes for 1,000 locat
 7. 모델별 결과를 입력 표와 결합해 `포인트지정.csv`로 저장합니다.
 
 매칭은 지점·모델 항목별로 독립 수행합니다. 산출물은 **값 조건을 통과한 최근접 격자의 지정 결과**입니다. 보간, 관측값과의 비교, 모델 간 시간 정렬, 예측 성능 평가는 수행하지 않습니다. 계산된 거리가 정확히 같은 후보가 여러 개이면 NumPy 배열 탐색 순서에 따라 선택합니다.
+
+<a id="ko-data"></a>
 
 ### Data contract · 입력 데이터 요건
 
@@ -223,6 +351,8 @@ The presentation's reported runtime of approximately six minutes for 1,000 locat
 
 실행 전 좌표 단위·범위·결측, 격자 크기의 일치 여부, 변수 차원 순서를 확인해야 합니다. 코드에는 입력 스키마와 좌표계를 포괄적으로 검증하는 기능이 없습니다. 좌표 변환과 단위 변환도 수행하지 않습니다. 시간 검사는 배열 순서 기준이므로, 검사 구간의 실제 지속 시간은 원본 자료의 시간 간격에 따라 달라집니다.
 
+<a id="ko-contents"></a>
+
 ### Repository contents · 저장소 구성
 
 | 경로 | 용도 |
@@ -235,6 +365,8 @@ The presentation's reported runtime of approximately six minutes for 1,000 locat
 | `requirements.txt` | 외부 Python 패키지 목록 |
 | `tests/test_matching.py` | 합성 NetCDF 기반 회귀 검증 |
 | `model/` | 직접 준비하는 모델 데이터, Git 추적 제외 |
+
+<a id="ko-quick-start"></a>
 
 ### Quick start · 실행 방법
 
@@ -254,7 +386,8 @@ python -m pip install -r requirements.txt
 python "지점_격자_자동매칭.py"
 ```
 
-macOS / Linux:
+<details>
+<summary>macOS / Linux 실행 명령</summary>
 
 ```bash
 source .venv/bin/activate
@@ -262,13 +395,20 @@ python -m pip install -r requirements.txt
 python "지점_격자_자동매칭.py"
 ```
 
+</details>
+
 실행 전에 `포인트.xlsx`를 작성하고 스크립트 옆에 `model/` 폴더를 만든 뒤 필요한 NetCDF 파일을 넣습니다. 파일 경로는 **스크립트가 있는 폴더**를 기준으로 해석합니다. `.xlsx` 입력에는 `openpyxl`이 필요하고, `multiprocessing`은 Python 표준 라이브러리이므로 별도 설치하지 않습니다.
 
 실행 후 출력 열과 콘솔 안내를 함께 확인하십시오. 모든 모델이 제외되어도 CSV는 생성될 수 있습니다.
 
+<a id="ko-models"></a>
+
 ### Model configuration · 모델 설정
 
 스크립트의 `model_infos`에서 파일명과 변수명을 수정합니다. 아래 파일은 모두 `model/` 아래에 둡니다.
+
+<details>
+<summary><strong>전체 15개 모델 설정 보기</strong></summary>
 
 | 항목 | NetCDF 파일 | 위도 / 경도 변수 | 값 변수 | 시간 변수 |
 | --- | --- | --- | --- | --- |
@@ -288,7 +428,11 @@ python "지점_격자_자동매칭.py"
 | WRFdm1 | `wrfdm1_20240627_20240706.nc` | `lat_rho` / `lon_rho` | 검사하지 않음 | 사용하지 않음 |
 | WRFdm2 | `wrfdm2_20240627_20240706.nc` | `lat_rho` / `lon_rho` | 검사하지 않음 | 사용하지 않음 |
 
+</details>
+
 WRF 외 항목의 시간 길이는 지정된 변수·차원에서 우선 확인하고, 없으면 `ocean_time`, `time`, `tim`을 순서대로 조회합니다. 모델을 추가할 때도 지원하는 배열 구조를 만족해야 합니다.
+
+<a id="ko-output"></a>
 
 ### Output specification · 출력 명세
 
@@ -305,6 +449,8 @@ WRF 외 항목의 시간 길이는 지정된 변수·차원에서 우선 확인�
 
 출력에는 원본 지점 좌표와 선택 격자 인덱스가 포함됩니다. 선택 격자의 좌표, 거리, 세부 탈락 사유는 출력하지 않습니다.
 
+<a id="ko-validation"></a>
+
 ### Validation · 검증 근거
 
 실제 모델 데이터 없이 회귀 검증을 실행할 수 있습니다.
@@ -315,6 +461,9 @@ python -m unittest discover -s tests -v
 
 **기록된 결과: 2026-10-14 합성 자료 기반 테스트 11개 통과.**
 
+<details>
+<summary><strong>검증 당시 실행 환경 보기</strong></summary>
+
 | 환경 | 검증 당시 버전 |
 | --- | --- |
 | 운영체제 | Windows |
@@ -324,17 +473,25 @@ python -m unittest discover -s tests -v
 | netCDF4 | 1.7.4 |
 | openpyxl | 3.1.5 |
 
+</details>
+
 검증 범위는 알려진 거리 계산, 반경 밖 후보 제외, 무효인 최근접 격자 제외, 여러 시점의 조건 결합, 20개 시점 제한과 짧은 시계열, 1·2차원 좌표, WRF 예외, 파일 누락·열기 실패, 지원하지 않는 값 배열 차원, 모든 모델 누락 시 입력만 출력하는 동작입니다. 양의 무한대에 대한 현재 값 판정도 회귀 검증에 기록했습니다.
 
 netCDF4 배열 쓰기에서 NumPy 관련 `DeprecationWarning`이 발생했지만 테스트는 통과했습니다. 의존성 버전을 고정하지 않았으므로 이 표는 검증 환경의 기록이며, 모든 설치 환경에서 같은 동작을 보장하는 사양은 아닙니다.
 
-**검증의 범위와 한계:** 저장소 준비 과정에서 실제 모델 전체를 재실행하지 않았습니다. 테스트는 합성 사례의 구현 동작을 확인하며, 운영 자료의 정확도·예측 성능·처리량을 입증하지 않습니다.
+> [!IMPORTANT]
+> **검증의 범위와 한계:** 저장소 준비 과정에서 실제 모델 전체를 재실행하지 않았습니다. 테스트는 합성 사례의 구현 동작을 확인하며, 운영 자료의 정확도·예측 성능·처리량을 입증하지 않습니다.
 
 기존 예시 CSV는 **17행·44열**이고 대응하는 예시 Excel도 17행입니다. 현재 루트 입력은 **19행·2열**이므로 기존 CSV를 현재 입력의 재실행 결과로 해석할 수 없습니다. 예시 결과의 모든 행에 일부 모델 결측이 있어, 전체 지점·모델의 매칭 성공 근거보다는 출력 형식 참고 자료로 사용해야 합니다.
 
 설명자료에 기재된 ‘1,000개 지점 약 6분’은 과거 보고 수치이며 저장소 준비 과정에서 다시 측정하지 않았습니다.
 
+<a id="ko-notes"></a>
+
 ### Notes · 적용 시 유의점
+
+> [!IMPORTANT]
+> 선택 격자를 운영 서비스에 활용하기 전에 값 판정 규칙과 원본 메타데이터를 확인하십시오.
 
 **값 판정의 의미.** `is_normal_value()`는 NaN과 0을 제외한 뒤 문자열에 `+`, `-`가 포함되거나 `nan`, `NaN`, `None`과 일치하는 값을 제외합니다. 음수와 지수 부호가 포함된 과학적 표기 값도 제외될 수 있고, 양의 무한대는 통과할 수 있습니다. 구현에 따른 후보 선정 규칙이므로 변수의 물리적 정상 범위를 보장하지 않습니다. 대상 변수·단위·유효 범위에 맞는지 검토해야 합니다.
 
@@ -347,3 +504,8 @@ netCDF4 배열 쓰기에서 NumPy 관련 `DeprecationWarning`이 발생했지만
 **데이터 관리.** 모델 원본과 루트에 생성되는 실행 결과는 `.gitignore`로 제외하고, 제공된 예시 파일은 버전 관리합니다. 사용 권한이 있는 모델 데이터를 별도로 준비하십시오.
 
 **향후 개선.** 변수별 유효 범위, 유한값·마스크의 명시적 처리, 반경·시간 구간 설정화, 슬라이스 읽기, 선택 격자 좌표·거리 출력, 구조화된 처리 보고서, 수직 레벨 지원, 결과 시각화가 개선 후보입니다. 현재 구현된 기능과 구분합니다.
+
+
+---
+
+[맨 위로](#top) · [English documentation](#english)
