@@ -1,0 +1,26 @@
+# Model data are supplied locally and must never be committed.
+/model/
+*.nc
+*.nc4
+*.cdf
+*.grib
+*.grb
+*.grib2
+*.h5
+*.hdf5
+
+# Generated outputs (the curated files under 결과물 예시/ remain tracked).
+/포인트지정.csv
+/missing_models.txt
+
+# Local environments and verification artifacts.
+/.verification/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.*
+.DS_Store
+Thumbs.db
